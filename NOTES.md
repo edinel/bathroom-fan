@@ -6,6 +6,25 @@
 - **Adafruit Feather ESP32 V2**
 - PlatformIO board: `adafruit_feather_esp32_v2`
 
+### Power Supply
+
+- **12V DC power supply** — powers the fan directly
+- **UBEC DC/DC Step-Down Buck Converter** (Adafruit #1385) — converts 12V → 5V for the Feather
+  - Input: 6–16V, Output: 5V @ 3A continuous
+
+#### Wiring: 12V → Feather via Buck Converter
+
+| Buck Converter | Connect to        |
+|----------------|-------------------|
+| IN+            | 12V supply +      |
+| IN−            | 12V supply GND    |
+| OUT+           | Feather `USB` pin |
+| OUT−           | Feather `GND`     |
+
+> **Important:** Feed 5V into the Feather's `USB` pin only. Do NOT use `BAT` (expects 3.7–4.2V) or `3V` (bypasses regulator).
+
+> All GNDs (12V supply, buck converter, Feather, EMC2101, fan) must be tied to a **common ground**.
+
 ### Fan Controller
 - **Adafruit EMC2101** — controls fan PWM and reads tach (RPM)
 - Interface: I2C
@@ -19,6 +38,31 @@
   - Accuracy: ±2% RH, ±0.5°C
   - Operates at 3–5VDC
 - Library: `adafruit/Adafruit SHT31 Library@^2.2.2` (covers full SHT3x family)
+
+## Wiring: EMC2101 to Feather ESP32 V2 (I2C)
+
+| EMC2101 Pin | Feather Pin   |
+|-------------|---------------|
+| VIN         | 3V            |
+| GND         | GND           |
+| SCL         | SCL (GPIO 20) |
+| SDA         | SDA (GPIO 22) |
+
+## Wiring: EMC2101 to Fan (4-wire PWM)
+
+| EMC2101 Pin | Fan Wire        |
+|-------------|-----------------|
+| TACH        | Yellow (tach)   |
+| FAN         | Blue (PWM)      |
+
+Fan power connects directly to the power supply, not through the EMC2101:
+
+| Fan Wire   | Connect to       |
+|------------|------------------|
+| Red (+12V) | 12V power supply |
+| Black      | Common GND       |
+
+> **Note:** DP/DN pins are for an external thermal diode — leave unconnected if not used.
 
 ## Wiring: SHT30 to Feather ESP32 V2
 
