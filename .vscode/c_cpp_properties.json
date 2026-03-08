@@ -8,6 +8,7 @@
         {
             "name": "PlatformIO",
             "includePath": [
+                "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/include",
                 "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/src",
                 "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/.pio/libdeps/adafruit_feather_esp32_v2/Adafruit EMC2101",
                 "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/.pio/libdeps/adafruit_feather_esp32_v2/Adafruit BusIO",
@@ -248,6 +249,7 @@
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
+                    "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/include",
                     "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/src",
                     "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/.pio/libdeps/adafruit_feather_esp32_v2/Adafruit EMC2101",
                     "/Users/edinel/Library/CloudStorage/Dropbox/source/bathroom-fan/.pio/libdeps/adafruit_feather_esp32_v2/Adafruit BusIO",
