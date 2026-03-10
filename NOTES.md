@@ -39,6 +39,36 @@
   - Operates at 3–5VDC
 - Library: `adafruit/Adafruit SHT31 Library@^2.2.2` (covers full SHT3x family)
 
+### Physical Button + LED Indicator
+
+- **Adafruit #481** — Rugged Metal Pushbutton with Blue LED Ring (16mm, momentary)
+  - Button: momentary, COM → GND, NO → GPIO (INPUT_PULLUP)
+  - LED: ~20mA, rated 6V with built-in resistor; runs slightly dim from 5V rail
+- **PN2222 NPN Transistor** (Adafruit #756, 10-pack) — switches LED from 5V rail
+  - ESP32 GPIO can only source ~12mA; LED needs 20mA at 5–6V, so a transistor is required
+  - GPIO controls the base (~2mA); LED current flows from 5V rail through transistor
+
+#### Wiring: Button LED Circuit
+
+```
+Feather USB pin (5V) ──── LED+
+                          LED− ──── PN2222 collector
+                          PN2222 emitter ──── GND
+                          PN2222 base ──── 1kΩ ──── GPIO 14
+```
+
+Button wiring: COM → GND, NO → GPIO 15 (INPUT_PULLUP, no external resistor needed)
+
+> The Feather `USB` pin exposes the 5V rail from the buck converter — tap here for LED power.
+
+#### Behavior
+
+- Press toggles manual override on/off; entering manual forces fan to 100%
+- LED is ON whenever fan duty cycle > 0
+- Button and web server share the same `g_manualOverride` flag — either can cancel the other
+
+See `src/pushbutton_suggestion.cpp` for implementation.
+
 ## Wiring: EMC2101 to Feather ESP32 V2 (I2C)
 
 | EMC2101 Pin | Feather Pin   |
