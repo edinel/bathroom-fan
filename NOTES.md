@@ -12,8 +12,7 @@
 - **UBEC DC/DC Step-Down Buck Converter** (Adafruit #1385) — converts 12V → 5V for the Feather
   - Input: 6–16V, Output: 5V @ 3A continuous
 
-#### Wiring: 12V → Feather via Buck Converter
-
+#### Wiring: 12V → Feather via Buck Converterz
 | Buck Converter | Connect to        |
 |----------------|-------------------|
 | IN+            | 12V supply +      |
