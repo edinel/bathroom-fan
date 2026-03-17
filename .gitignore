@@ -40,4 +40,10 @@
 # debug information files
 *.dwo
 
+# PlatformIO build artifacts and cache (includes .sconsign*.dblite, object files, firmware)
+.pio/
+
+# macOS metadata
+.DS_Store
+
 include/arduino-secrets.h

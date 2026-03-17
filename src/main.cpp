@@ -13,8 +13,9 @@ Adafruit_SHT31 sht30;
 #define LED_PIN     12    // GPIO driving NPN transistor base
 #define HOSTNAME "bathroom-fan"
 
-// Humidity thresholds
-static const float HUMIDITY_OFF    = 50.0;  // below this, fan is off
+// Humidity thresholds — hysteresis band prevents flutter at the boundary
+static const float HUMIDITY_OFF    = 48.0;  // turn off below this
+static const float HUMIDITY_ON     = 52.0;  // turn on above this
 static const float HUMIDITY_FULL   = 85.0;  // above this, fan is at 100%
 
 // Fan duty cycle limits (percent)
@@ -37,10 +38,19 @@ int     g_manualDuty = 0;          // Manually set duty cycle
 
 
 uint8_t humidityToDutyCycle(float humidity) {
-  if (humidity <= HUMIDITY_OFF)   return 0;
-  if (humidity >= HUMIDITY_FULL)  return FAN_MAX_DUTY;
+  static bool fanRunning = false;
 
-  float fraction = (humidity - HUMIDITY_OFF) / (HUMIDITY_FULL - HUMIDITY_OFF);
+  // Hysteresis: only start above HUMIDITY_ON, only stop below HUMIDITY_OFF
+  if (fanRunning) {
+    if (humidity < HUMIDITY_OFF) fanRunning = false;
+  } else {
+    if (humidity > HUMIDITY_ON)  fanRunning = true;
+  }
+
+  if (!fanRunning)               return 0;
+  if (humidity >= HUMIDITY_FULL) return FAN_MAX_DUTY;
+
+  float fraction = (humidity - HUMIDITY_ON) / (HUMIDITY_FULL - HUMIDITY_ON);
   return (uint8_t)(FAN_MIN_DUTY + fraction * (FAN_MAX_DUTY - FAN_MIN_DUTY));
 }
 
@@ -65,6 +75,8 @@ void handleButton() {
       } else {
         g_manualOverride = true;
         g_manualDuty     = 100;
+        g_dutyCycle      = 100;           // update immediately so /status is accurate
+        emc2101.setDutyCycle(100);        // apply to hardware immediately, don't wait for loop tick
         Serial.println("Button: manual override ON (100%)");
       }
     }
@@ -85,7 +97,7 @@ static String fillTemplate() {
   char buf[32];
   snprintf(buf, sizeof(buf), "%.1f %%", g_humidity);
   html.replace("%HUMIDITY%", buf);
-  snprintf(buf, sizeof(buf), "%.1f C", g_temperature);
+  snprintf(buf, sizeof(buf), "%.1f F", g_temperature * 9.0f / 5.0f + 32.0f);
   html.replace("%TEMPERATURE%", buf);
   snprintf(buf, sizeof(buf), "%d %%", g_dutyCycle);
   html.replace("%DUTY%", buf);
@@ -135,7 +147,7 @@ void setupWebServer() {
     char json[128];
     snprintf(json, sizeof(json),
       "{\"humidity\":%.1f,\"temperature\":%.1f,\"duty\":%d,\"rpm\":%d,\"manual\":%s}",
-      g_humidity, g_temperature, g_dutyCycle, g_fanRPM,
+      g_humidity, g_temperature * 9.0f / 5.0f + 32.0f, g_dutyCycle, g_fanRPM,
       g_manualOverride ? "true" : "false");
     return response->send(200, "application/json", json);
   });
@@ -151,7 +163,9 @@ void setupWebServer() {
       int duty = request->getParam("duty")->value().toInt();
       duty = constrain(duty, 0, 100);
       g_manualDuty     = duty;
+      g_dutyCycle      = duty;           // update immediately so /status is accurate
       g_manualOverride = true;
+      emc2101.setDutyCycle(duty);        // apply to hardware immediately, don't wait for loop tick
       Serial.printf("Manual duty: %d%%\n", duty);
     }
     return response->send(200, "text/plain", "OK");
@@ -162,7 +176,6 @@ void setupWebServer() {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
 
   Serial.println("Bathroom Fan Controller");
 
@@ -205,9 +218,10 @@ void loop() {
   
   g_dutyCycle = g_manualOverride ? (uint8_t)g_manualDuty : humidityToDutyCycle(g_humidity);
   emc2101.setDutyCycle(g_dutyCycle);
+  g_fanRPM = emc2101.getFanRPM();
 
-  Serial.printf("Humidity: %.1f%%  Temp: %.1fC  Fan: %d%%  RPM: %d\n",
-                g_humidity, g_temperature, g_dutyCycle, emc2101.getFanRPM());
+  Serial.printf("Humidity: %.1f%%  Temp: %.1fC (%.1fF)  Fan: %d%%  RPM: %d\n",
+                g_humidity, g_temperature, g_temperature * 9.0f / 5.0f + 32.0f, g_dutyCycle, g_fanRPM);
 }
 
 // ---------------------------------------------------------------------------
