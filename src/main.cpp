@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PsychicHttp.h>
-#include <PsychicHttpsServer.h>
 #include "arduino-secrets.h"
 #include "string_constants.h"
 
@@ -27,7 +26,7 @@ static const unsigned long DEBOUNCE_MS = 50;
 static unsigned long lastPressTime  = 0;
 static bool          lastButtonState = HIGH;  // HIGH = not pressed (INPUT_PULLUP)
 
-PsychicHttpsServer server;
+PsychicHttpServer server;
 
 float   g_humidity    = 0.0f;      // latest humidity reading (%)
 float   g_temperature = 0.0f;      // latest temperature reading (C)
@@ -133,7 +132,6 @@ void Connect_to_Wifi() {
 void setupWebServer() {
   Connect_to_Wifi();
 
-  server.setCertificate(server_cert, server_key);
   server.begin();
 
   // Root page
@@ -163,9 +161,8 @@ void setupWebServer() {
       int duty = request->getParam("duty")->value().toInt();
       duty = constrain(duty, 0, 100);
       g_manualDuty     = duty;
-      g_dutyCycle      = duty;           // update immediately so /status is accurate
+      g_dutyCycle      = duty;
       g_manualOverride = true;
-      emc2101.setDutyCycle(duty);        // apply to hardware immediately, don't wait for loop tick
       Serial.printf("Manual duty: %d%%\n", duty);
     }
     return response->send(200, "text/plain", "OK");
@@ -196,7 +193,6 @@ void setup() {
   emc2101.setDutyCycle(0);
   setupButton(); // Setup the Pushbutton
   setupWebServer();  
-
 }
 
 void loop() {

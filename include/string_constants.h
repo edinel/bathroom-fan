@@ -26,6 +26,7 @@ static const char INDEX_HTML[] = R"rawhtml(
     .speed-buttons button { flex: 1; min-width: 60px; padding: 10px; border: none; border-radius: 6px;
                             background: #607d8b; color: white; cursor: pointer; font-size: 0.95em; }
     .speed-buttons button:hover { background: #455a64; }
+    .speed-buttons button.active { background: #1976d2; }
     #manual-controls { display: %MANUAL_DISPLAY%; }
     #status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
                   background: #4caf50; margin-right: 6px; }
@@ -49,11 +50,11 @@ static const char INDEX_HTML[] = R"rawhtml(
     <div id="manual-controls">
       <p style="color:#666; margin:0 0 8px">Set fan speed:</p>
       <div class="speed-buttons">
-        <button onclick="setSpeed(0)">Off</button>
-        <button onclick="setSpeed(25)">25%</button>
-        <button onclick="setSpeed(50)">50%</button>
-        <button onclick="setSpeed(75)">75%</button>
-        <button onclick="setSpeed(100)">100%</button>
+        <button id="speed-0"   onclick="setSpeed(0)">Off</button>
+        <button id="speed-25"  onclick="setSpeed(25)">25%</button>
+        <button id="speed-50"  onclick="setSpeed(50)">50%</button>
+        <button id="speed-75"  onclick="setSpeed(75)">75%</button>
+        <button id="speed-100" onclick="setSpeed(100)">100%</button>
       </div>
     </div>
   </div>
@@ -63,7 +64,13 @@ static const char INDEX_HTML[] = R"rawhtml(
       fetch('/update?mode=' + mode).then(() => refreshStatus());
     }
     function setSpeed(pct) {
+      highlightSpeed(pct);
       fetch('/update?duty=' + pct).then(() => refreshStatus());
+    }
+    function highlightSpeed(duty) {
+      [0, 25, 50, 75, 100].forEach(s => {
+        document.getElementById('speed-' + s).classList.toggle('active', s === duty);
+      });
     }
     function refreshStatus() {
       fetch('/status')
@@ -77,6 +84,7 @@ static const char INDEX_HTML[] = R"rawhtml(
           document.getElementById('btn-auto').style.background   = manual ? '#90a4ae' : '#4caf50';
           document.getElementById('btn-manual').style.background = manual ? '#f44336' : '#90a4ae';
           document.getElementById('manual-controls').style.display = manual ? 'block' : 'none';
+          if (manual) highlightSpeed(d.duty);
         })
         .catch(() => { document.getElementById('status-dot').style.background = '#f44336'; });
     }
