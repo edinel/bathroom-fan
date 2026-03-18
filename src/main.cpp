@@ -13,8 +13,8 @@ Adafruit_SHT31 sht30;
 #define HOSTNAME "bathroom-fan"
 
 // Humidity thresholds — hysteresis band prevents flutter at the boundary
-static const float HUMIDITY_OFF    = 48.0;  // turn off below this
-static const float HUMIDITY_ON     = 52.0;  // turn on above this
+static const float HUMIDITY_OFF    = 55.0;  // turn off below this
+static const float HUMIDITY_ON     = 58.0;  // turn on above this
 static const float HUMIDITY_FULL   = 85.0;  // above this, fan is at 100%
 
 // Fan duty cycle limits (percent)
